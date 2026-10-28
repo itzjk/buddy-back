@@ -14,6 +14,8 @@ npm pack --dry-run
 
 Tests cover hook-to-render reactions, existing status-line composition, names and persistent off, concurrent sessions, malformed inputs, settings edits, shell quoting, backup permissions, and exact install/uninstall restoration. The packaging test installs the package in a clean prefix and exercises the CLI without a checkout. Tests use temporary profiles and never modify personal Claude settings.
 
+For the real terminal UI, run `npm run check:claude` from an interactive terminal. It requires local authentication and checks visible frames in Claude Code, separately from the fixture suite. See the [live checklist and current acceptance blocker](live-check.md). This account-dependent check is not run in CI.
+
 The benchmark measures 30 status processes after five warmups, including Node startup, and fails above a 200 ms p95 budget. It uses local files with no previous status command. Run it on your machine to measure its startup cost.
 
 CI runs tests, the benchmark, and a packaging check on Node 20, 22, and 24 for Linux and macOS.

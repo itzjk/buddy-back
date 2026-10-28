@@ -80,11 +80,11 @@ Yes, if it supports a command status line and activity events. You supply the wi
 - Older Claude Code versions may refresh only on events. Project or managed settings can override the integration.
 - Claude Code hides the status line during permission prompts, so the waiting expression may be hidden too.
 - Reactions depend on delivered hooks and recognizable output. They describe activity, not code quality.
-- Automated tests cover installed commands with fixture JSON. An interactive Claude Code session still needs a manual check.
+- Live integration remains unverified here because Claude Code requires login. The [interactive check](docs/live-check.md) tests visible reactions in an authenticated session.
 
 ## Contributing
 
-Run `npm test` from a clone; [development instructions](docs/development.md) cover the benchmark and demo recording. CI tests Node 20, 22, and 24 on Linux and macOS.
+Run `npm test` from a clone, then `npm run check:claude` in a terminal for the live check. [Development instructions](docs/development.md) cover the benchmark and demo recording. CI tests Node 20, 22, and 24 on Linux and macOS.
 
 ## License
 
