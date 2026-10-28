@@ -1,152 +1,90 @@
 # buddy-back
 
-Your terminal companion is back. An animated ASCII buddy for Claude Code's status line that reacts to your session, with zero tokens and no network calls.
+A little company for the long coding sessions: an ASCII buddy that reacts to Claude Code as you work.
 
-![A cat thinks, celebrates passing tests, worries about an error, and falls asleep](docs/demo.gif)
+[![Tests](https://github.com/itzjk/buddy-back/actions/workflows/test.yml/badge.svg)](https://github.com/itzjk/buddy-back/actions/workflows/test.yml)
+[![MIT license](https://img.shields.io/github/license/itzjk/buddy-back)](LICENSE)
 
-*Demo uses simulated hook events and the real renderer. Cat, robot, ghost, and dragon included. No feeding schedule required.*
+![Mochi the cat reacts to prompts, passing tests, a failed tool, a permission request, and bedtime](docs/demo.gif)
 
-**Install and configure in one command** (Node.js 20+, macOS or Linux):
+## Quick start
+
+Requires Node.js 20+ on macOS, Linux, or WSL. Install and set up your buddy:
 
 ```sh
 npm i -g github:itzjk/buddy-back && buddy-back install
 ```
 
-Restart Claude Code, then give your buddy a name:
+Restart Claude Code to load the hooks. Meet your buddy in a terminal preview:
 
 ```sh
-buddy-back name Mochi
-```
-
-Community project. Not affiliated with, endorsed by, or a product of Anthropic. Original ASCII companions; this does not restore Anthropic's original sprites or saved pets.
-
-## A small friend, a smaller footprint
-
-```text
- /\_/\  (=^.^=)  Mochi | ready
- /\_/\  (=o.o=) .  Mochi | thinking
- /\_/\  (=^w^=) +  Mochi | tests passed
- /\_/\  (=o_o=) !  Mochi | something failed
- /\_/\  (=-.-=) z  Mochi | napping
- /\_/\  (=^w^=) *+*  Mochi | long task done!
- /\_/\  (=o.o=) ?  Mochi | needs you
-```
-
-This is actual output from `buddy-back demo`, after naming the cat Mochi. Frames change once per second. There is no daemon, MCP server, model prompt, telemetry, runtime dependency, or transcript reader.
-
-## Meet your buddy
-
-```sh
-buddy-back list
-buddy-back choose dragon
-buddy-back name Ember
-buddy-back demo
 buddy-back demo --animate
-buddy-back off
-buddy-back on
 ```
 
-`off` persists across restarts. It hides your buddy and stops hook state writes. Your previous status line keeps working. `on` brings back the same buddy and name. Names accept 1-24 printable ASCII characters; quote names containing spaces.
+Press Ctrl-C to finish the preview. Your buddy lives in Claude Code's status line during normal sessions. No feeding schedule required.
 
-## Why this exists
+## Features
 
-People wanted their buddy back. [Claude Code issue #45596, “Bring Back Buddy”](https://github.com/anthropics/claude-code/issues/45596) had **1,195 thumbs-up reactions on October 27, 2026**, confirmed with the GitHub API. The issue reports that `/buddy` disappeared in v2.1.97 and collects requests for persistent companions and customization.
+- Pick a cat, robot, ghost, or dragon and give it a name.
+- See thinking, passing tests, tool failures, and naps at a glance.
+- Get a little celebration when a turn takes at least a minute.
+- Keep your existing status command and hooks, with a backup before setup.
+- Turn your buddy off persistently, then bring it back with the same name.
+- Spend zero tokens: local files, no network calls, no runtime dependencies.
 
-Other people have answered that call, too: [coding-buddy](https://github.com/ramarivera/coding-buddy), [ClaudeBuddy](https://github.com/NBS1997/ClaudeBuddy), [save-buddy](https://github.com/jrykn/save-buddy), and [GitAnimals Buddy](https://github.com/git-goods/gitanimals-buddy). This is a deliberately small alternative: four original ASCII buddies, deterministic reactions, and reversible configuration. It does not claim to be the first or only companion.
+## Why
+
+The community's [“Bring Back Buddy” request](https://github.com/anthropics/claude-code/issues/45596) had **1,195 thumbs-up reactions on October 27, 2026**. It reports that `/buddy` disappeared in v2.1.97 and asks for customization, session reactions, and a persistent off switch. buddy-back gives that empty corner of your terminal a new resident.
+
+This is a community project, with no affiliation with or endorsement from Anthropic. The ASCII companions are original; saved pets from the former `/buddy` feature aren't imported.
 
 ## How it works
 
-The installer merges a [command status line](https://code.claude.com/docs/en/statusline) and nine [command hooks](https://code.claude.com/docs/en/hooks) into `~/.claude/settings.json`. It keeps unrelated settings and existing hooks. An existing command status line is run with the same JSON input and displayed above your buddy.
+Installation merges a [command status line](https://code.claude.com/docs/en/statusline) and session hooks into `~/.claude/settings.json`. Hooks record activity locally; the status command reads it and prints an animated frame once per second. Your previous command status line appears above the buddy. Sessions stay separate, and prompts, tool output, and transcripts aren't saved. The GIF replays sample hook events through these installed commands in a temporary profile; see the [recording instructions](docs/development.md#record-the-demo).
 
-| Event | Reaction |
+## Usage
+
+| Command | What happens |
 | --- | --- |
-| Session starts | Ready |
-| You send a prompt, or a tool starts | Thinking |
-| A recognized test command reports success | Happy for 15 seconds |
-| A tool fails or reports a nonzero exit code | Worried for 30 seconds |
-| Permission needed | Waiting for you |
-| Turn finishes after at least 60 seconds | Celebrates for 15 seconds |
-| Turn finishes sooner | Ready |
-| Idle for 60 seconds, or session ends | Sleeping |
+| `buddy-back list` | Meet all four companions |
+| `buddy-back choose dragon` | Switch companions |
+| `buddy-back name Ember` | Set a name, up to 24 printable ASCII characters |
+| `buddy-back demo` | Print every reaction |
+| `buddy-back demo --animate` | Watch an animated preview |
+| `buddy-back off` / `buddy-back on` | Hide or restore your buddy across restarts |
+| `buddy-back install` | Configure the status line and hooks |
+| `buddy-back uninstall` | Remove the integration and restore settings |
+| `buddy-back help` | Show all commands |
 
-“Long task” means one prompt-to-Stop turn, not the lifetime of your session. These are activity signals, not judgments about code quality. The test detector recognizes common npm/pnpm/yarn/bun, Node test runner, Jest/Vitest, pytest/unittest, Go, and Cargo commands. It requires a success summary or an explicit zero exit code. Custom commands and unfamiliar output may stay in the thinking state. Failed-test evidence takes priority over a pass summary.
+## FAQ
 
-Session files are isolated by a SHA-256 hash of `session_id`. They store only mood, timing, working status, and active tool IDs. Prompts, command text, output, and transcripts are not saved. Session files older than seven days are removed on the next session start. Abandoned working states sleep after 15 minutes without an event.
+**Will this replace my status line?**
 
-### Safe installation and removal
+Your existing command still runs with the same input, and its output appears above the buddy. Existing hooks remain installed.
 
-Before changing settings, buddy-back saves their original bytes in a private backup under `~/.claude/buddy-back/`. It also copies its runtime there, so the hooks don't depend on your checkout, npm's temporary cache, or a global executable staying installed. Node must remain available at its installed path. Re-running `install` leaves the original backup and preferences intact.
+**Can I undo installation?**
 
-To remove the integration:
+Run `buddy-back uninstall` before `npm uninstall -g buddy-back`. With no intervening settings edits, uninstall restores the original bytes and permissions. Otherwise, it removes its own integration while preserving your later edits. Backups and preferences remain. [Configuration and recovery](docs/configuration.md) covers profiles and manual recovery.
 
-```sh
-buddy-back uninstall
-npm uninstall -g buddy-back
-```
+**Does it know my tests passed?**
 
-Run those in that order. If settings are unchanged since installation, uninstall restores the original file **byte for byte**, including its permission mode, or removes the generated file if none existed. If you've edited settings meanwhile, uninstall removes its own hook commands and restores its command status line while preserving unrelated edits and a replacement status line. Formatting can change in that case. Preferences and backups remain for recovery.
+It recognizes common test commands and requires a success summary or explicit zero exit code. Failure evidence takes priority. Unrecognized output may leave it thinking.
 
-Invalid JSON and symbolic-link settings files are refused without overwriting them. If an operation is interrupted, a lock may remain in `~/.claude/buddy-back/`; the error identifies it. Remove that lock only after confirming no buddy-back command is running. If the installation record is damaged, recover from the saved `settings.before-*.json` file. Backups can contain sensitive settings, so keep them private.
+**Can another terminal agent use it?**
 
-Use a separate Claude profile by setting `CLAUDE_CONFIG_DIR` consistently for install, customization, and uninstall. Installed hooks and status commands remember that profile automatically:
-
-```sh
-CLAUDE_CONFIG_DIR="$PWD/.test-home" buddy-back install
-CLAUDE_CONFIG_DIR="$PWD/.test-home" buddy-back uninstall
-```
-
-### Speed
-
-The status command reads small local files and prints one frame. It never writes session state. On the development machine with Node 24, the initial benchmark measured **25.0 ms median / 26.7 ms p95**, including process startup, across 30 runs after five warmups. Your machine will differ. Run `npm run bench` from a checkout to measure it; CI enforces a generous 200 ms p95 budget.
-
-An existing status command adds its own startup and work. Its output is bounded to 64 KiB and its shell is killed after 500 ms; errors are suppressed so the buddy can still render. Existing commands should be short-lived and should not spawn background jobs. Hooks are silent, exit successfully even on malformed input, and never approve or block tools. JSON input is capped at 1 MiB; oversized events are ignored.
+Yes, if it supports a command status line and activity events. You supply the wiring; the [adapter example](docs/configuration.md#other-terminal-agents) shows the JSON interface.
 
 ## Limitations
 
-- Requires Claude Code's terminal status line. This does not add a companion panel to VS Code or a desktop app.
-- `refreshInterval: 1` uses the current documented settings schema. Older Claude Code releases may refresh only on session events, so animation and sleep transitions can appear less often. Update Claude Code if frames do not advance while idle.
-- Project or managed settings can override the user status line or disable hooks. Restart Claude Code after installing or uninstalling, and check `/hooks` if reactions are missing.
-- Success detection is conservative and based on structured hook input plus recognizable test output. It cannot prove arbitrary shell commands succeeded. Skipped hooks, truncated inputs, a process crash, or stopped refreshes can leave an outdated expression until another event.
-- macOS and Linux are supported by the installer. On Windows, use WSL with Node inside WSL. Native PowerShell is not supported.
-- The automated suite feeds documented JSON shapes through the installed commands. An interactive Claude Code session has not been verified for this release. CI configuration is included; hosted CI results are only available after publication.
-- This repository must be published before the GitHub installation command can resolve it. The package is not on npm yet, so bare `npx buddy-back` is not an advertised installation path.
+- Terminal status line only; no VS Code panel. Native Windows users need WSL.
+- Older Claude Code versions may refresh only on events. Project or managed settings can override the integration.
+- Claude Code hides the status line during permission prompts, so the waiting expression may be hidden too.
+- Reactions depend on delivered hooks and recognizable output. They describe activity, not code quality.
+- Automated tests cover installed commands with fixture JSON. An interactive Claude Code session still needs a manual check.
 
-## Other terminal agents
+## Contributing
 
-The renderer accepts `{"session_id":"any-stable-id"}` on stdin. Any terminal agent that can run a custom command status line can call `buddy-back status`. It can send local events to `buddy-back hook` using the Claude hook event names in the table above. No model is needed. You must provide both integrations yourself; no native support for other agents is claimed. Without a documented custom command status line, this cannot be installed as one.
-
-For a quick manual check:
-
-```sh
-printf '%s' '{"session_id":"example-session","hook_event_name":"UserPromptSubmit"}' | buddy-back hook
-printf '%s' '{"session_id":"example-session"}' | buddy-back status
-```
-
-## Development
-
-From a clone, install the CLI and configure an isolated profile:
-
-```sh
-npm install -g . && CLAUDE_CONFIG_DIR="$PWD/.test-home" buddy-back install
-```
-
-Run the tests and benchmark:
-
-```sh
-npm test
-npm run bench
-```
-
-The tests cover hook-to-render reactions, original status-line composition, names and persistent off, concurrent sessions, malformed inputs, adversarial settings edits, shell quoting, backup permissions, and exact install/uninstall restoration. They use temporary profiles and never modify your real Claude settings.
-
-To render example Claude Code input without installing the integration:
-
-```sh
-node bin/buddy-back.mjs hook < test/fixtures/prompt.json
-node bin/buddy-back.mjs status < test/fixtures/status.json
-```
-
-Set `CLAUDE_CONFIG_DIR` to a temporary directory first if you want to keep this example state separate. To regenerate the GIF, install Pillow separately and run `python3 scripts/demo-gif.py`; Pillow is only a documentation tool.
+Run `npm test` from a clone; [development instructions](docs/development.md) cover the benchmark and demo recording. CI tests Node 20, 22, and 24 on Linux and macOS.
 
 ## License
 
