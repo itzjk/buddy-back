@@ -1,0 +1,6 @@
+{
+  "session_id": "example-session",
+  "hook_event_name": "UserPromptSubmit",
+  "cwd": "/home/developer/project",
+  "prompt": "Run the tests."
+}

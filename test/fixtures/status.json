@@ -1,0 +1,7 @@
+{
+  "session_id": "example-session",
+  "model": { "id": "claude-opus-4-6", "display_name": "Opus" },
+  "workspace": { "current_dir": "/home/developer/project", "project_dir": "/home/developer/project" },
+  "context_window": { "used_percentage": 25 },
+  "cost": { "total_cost_usd": 0.12, "total_duration_ms": 75000 }
+}

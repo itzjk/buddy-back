@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, delimiter } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+
+const repo = fileURLToPath(new URL('../', import.meta.url));
+
+test('published file set installs in a clean prefix and every noninteractive CLI example works without a checkout', { timeout: 30_000 }, t => {
+  const root = mkdtempSync(join(tmpdir(), 'buddy-back-package-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const cwd = join(root, 'clean');
+  const prefix = join(root, 'prefix');
+  mkdirSync(cwd);
+  const env = { ...process.env, npm_config_cache: join(root, 'cache'), npm_config_prefix: prefix, npm_config_update_notifier: 'false', npm_config_audit: 'false', npm_config_fund: 'false', CLAUDE_CONFIG_DIR: join(root, 'profile'), PATH: `${join(prefix, 'bin')}${delimiter}${process.env.PATH}` };
+  const pack = spawnSync('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', root], { cwd: repo, env, encoding: 'utf8', timeout: 10_000 });
+  assert.equal(pack.status, 0, pack.stderr);
+  const archive = JSON.parse(pack.stdout)[0];
+  assert.ok(archive.files.some(file => file.path === 'docs/demo.gif'));
+  assert.ok(!archive.files.some(file => /^(test|\.git|node_modules)\//.test(file.path)));
+  const install = spawnSync('npm', ['install', '-g', join(root, archive.filename), '--ignore-scripts'], { cwd, env, encoding: 'utf8', timeout: 10_000 });
+  assert.equal(install.status, 0, install.stderr);
+  const run = (args, input = '{}', expected = 0) => {
+    const result = spawnSync('buddy-back', args, { cwd, env, input, encoding: 'utf8', timeout: 4000 });
+    assert.equal(result.status, expected, `${args.join(' ')}: ${result.stderr}`);
+    return result;
+  };
+  assert.match(run(['install']).stdout, /Buddy is home/);
+  assert.match(run(['name', 'Mochi']).stdout, /Mochi/);
+  assert.match(run(['list']).stdout, /dragon/);
+  assert.match(run(['choose', 'dragon']).stdout, /Mochi/);
+  assert.match(run(['name', 'Ember']).stdout, /Ember/);
+  assert.match(run(['demo']).stdout, /long task done!/);
+  assert.match(run(['demo', '--animate'], '{}', 1).stderr, /requires a terminal/);
+  run(['off']);
+  assert.equal(run(['status']).stdout, '');
+  run(['on']);
+  run(['hook'], '{"session_id":"example-session","hook_event_name":"UserPromptSubmit"}');
+  assert.match(run(['status'], '{"session_id":"example-session"}').stdout, /thinking/);
+  const settings = JSON.parse(readFileSync(join(env.CLAUDE_CONFIG_DIR, 'settings.json'), 'utf8'));
+  const result = spawnSync('/bin/sh', ['-c', settings.statusLine.command], { cwd, env, input: '{"session_id":"example-session"}', encoding: 'utf8', timeout: 4000 });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Ember \| thinking/);
+  assert.equal(run(['uninstall']).status, 0);
+  assert.equal(existsSync(join(env.CLAUDE_CONFIG_DIR, 'settings.json')), false);
+  const remove = spawnSync('npm', ['uninstall', '-g', 'buddy-back'], { cwd, env, encoding: 'utf8', timeout: 10_000 });
+  assert.equal(remove.status, 0, remove.stderr);
+});

@@ -1,0 +1,19 @@
+{
+  "name": "buddy-back",
+  "version": "0.1.0",
+  "description": "An animated ASCII companion for Claude Code, powered by local hooks and zero tokens.",
+  "type": "module",
+  "bin": { "buddy-back": "bin/buddy-back.mjs" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "bench": "node scripts/bench.mjs",
+    "demo": "node bin/buddy-back.mjs demo"
+  },
+  "files": ["bin/", "lib/", "docs/demo.gif", "README.md", "LICENSE"],
+  "keywords": ["claude-code", "statusline", "terminal", "ascii-art", "companion", "developer-tools", "cli", "fun", "hooks"],
+  "repository": { "type": "git", "url": "https://github.com/itzjk/buddy-back.git" },
+  "homepage": "https://github.com/itzjk/buddy-back#readme",
+  "bugs": { "url": "https://github.com/itzjk/buddy-back/issues" },
+  "license": "MIT"
+}
