@@ -15,9 +15,13 @@ const quote = value => `'${value.replace(/'/g, `'"'"'`)}'`;
 const required = ['idle', 'thinking', 'happy', 'worried', 'celebrate', 'sleeping'];
 
 export function evaluateRecording(raw, code) {
-  const output = stripVTControlCharacters(raw).replaceAll('\r', '');
-  const seen = required.filter(mood => buddies.cat[mood].some(frame => output.includes(`${frame}  LiveBuddy | ${labels[mood]}`)));
-  const animated = buddies.cat.thinking.filter(frame => output.includes(`${frame}  LiveBuddy | ${labels.thinking}`)).length >= 2;
+  // The TUI redraws in place, so spaces between frame and label get dropped or doubled in the recording.
+  // Compare without whitespace.
+  const squash = text => text.replace(/\s+/g, '');
+  const output = squash(stripVTControlCharacters(raw).replaceAll('\r', ''));
+  const shown = (frame, mood) => output.includes(squash(`${frame}  LiveBuddy | ${labels[mood]}`));
+  const seen = required.filter(mood => buddies.cat[mood].some(frame => shown(frame, mood)));
+  const animated = buddies.cat.thinking.filter(frame => shown(frame, 'thinking')).length >= 2;
   return { seen, animated, passed: code === 0 && seen.length === required.length && animated };
 }
 

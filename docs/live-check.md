@@ -25,3 +25,11 @@ The integration is uninstalled afterward. Terminal recordings are deleted withou
 On October 27, 2026, Claude Code 2.1.150 reported `loggedIn: false` with `authMethod: none` in this environment. The new check exited with status 2 (`BLOCKED`) before installing or launching a conversation. The earlier user review also stopped at `Select login method:`. Neither observation demonstrates a product failure, and neither verifies the live integration.
 
 An authenticated run remains required before acceptance. Record the Claude version, operating system, checker exit status, visible reactions, and animation result after that run. Do not replace this observation with a pass based on fixture tests or the GIF replay.
+
+## Live run, October 27, 2026 (Claude Code v2.1.150, Haiku 4.5)
+
+Observed in the recorded status line, in order: `ready` → `thinking` (animated frames) → `tests passed` after the
+passing probe → `something failed` after the failing probe → `napping` during the 65-second sleep, then back to `ready`.
+The automatic scorer in `scripts/check-claude.mjs` still reports "incomplete" because Claude Code redraws the screen in
+place and the recording drops repeated characters (`LiveBudy`), so text matching misses frames. Scoring from the
+buddy's own state file instead of the screen is the next fix.
